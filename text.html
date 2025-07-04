@@ -40,5 +40,10 @@ Gmail : penh.seyha.1221@rupp.edu.kh
 Password : @#$Twisted_World29)#_
   
 
+    @GetMapping("get")
+    public List<Staff> call(List<Staff> staff){
+        return this.restTemplate.getForObject("http://localhost:7070/api/v3/Get", List<Staff>.class,staff));
+
+    }
 </body>
 </html>

@@ -1,3 +1,39 @@
+string tmp = "";
+string urlSms = "http(s)://api.mekongsms.com/api/postsms.aspx";
+string postParam = "username=" + username + "&pass=" + passMD5 +"&cd=" +
+System.Web.HttpUtility. UrlEncode (custdata) + "&sender=" + sender + "&smstext=" +
+System.Web.HttpUtility. UrlEncode (TextMessage) + "&gsm=" + GSMPhone;
+Uri uri = new Uri(urlSms);
+HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(uri);
+request.Method = WebRequestMethods.Http.Post;
+request.ContentType = "application/x-www-form-urlencoded";
+StreamWriter writer = new StreamWriter(request.GetRequestStream());
+writer.Write(postParam);
+writer.Close();
+HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+StreamReader reader = new StreamReader(response.GetResponseStream());
+tmp = reader.ReadToEnd();
+//tmp will be content that was returned by mekongsms
+response.Close();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>

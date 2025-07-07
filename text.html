@@ -17,9 +17,64 @@ tmp = reader.ReadToEnd();
 response.Close();
 
 
+=====The codes from C#====
+using System.Net;
+
+internal class Program
+{
+    
+  
+ static   void SendSMS(string username, string pass, string sender, string smstext, string
+        gsm, string intel, string cd)
+    {
+
+        try
+        {
+            string tmp = "";
+            string urlSms = "http://192.168.195.97:8282/services/sms-proxy";
+            string postParam = "username=" + username + "&pass=" + pass + "&sender=" + sender + "&smstext=" +
+            System.Web.HttpUtility.UrlEncode(smstext) + "&gsm=" + gsm 
+            +"&intel="+intel
+            +"&cd=" + System.Web.HttpUtility.UrlEncode(cd) ;
+            Uri uri = new Uri(urlSms);
+            HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(uri);
+            request.Method = WebRequestMethods.Http.Post;
+            request.ContentType = "application/x-www-form-urlencoded";
+            StreamWriter writer = new StreamWriter(request.GetRequestStream());
+            writer.Write(postParam);
+            writer.Close();
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            StreamReader reader = new StreamReader(response.GetResponseStream());
+            tmp = reader.ReadToEnd();
+            //tmp will be content that was returned by mekongsms
+            Console.WriteLine("Sussess!");
+            response.Close();
+
+        }
+        catch (Exception ex)
+        {
+
+
+            Console.WriteLine(ex.Message);
+
+        }
 
 
 
+
+
+    }
+    
+    private static void Main(string[] args)
+    {
+        Program.SendSMS("cab_sms@mekongnet", "a6f82e0bb188214b5ce84c1dd713fe53",
+            "CAB", "this is your otp Vattey is your phone number.", "888071405", "0", "From cab");
+    }
+
+
+}
+
+======End C#======
 
 
 

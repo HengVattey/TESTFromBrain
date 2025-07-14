@@ -1,5 +1,96 @@
 
 
+{
+    "content": [
+        {
+            "id": 1078,
+            "xref": "220309100521808939",
+            "fccref": "010BKOU230315726",
+            "txnHash": "e146e375166fa162a4d531560ab686abcd99d9da92c48716e19a0f5f46336636",
+            "phases": [
+                {
+                    "id": 1714,
+                    "phaseStep": "1",
+                    "resCode": "SUC",
+                    "resMark": "Approved and completed successfully",
+                    "exception": "{\"responseCode\":\"00\",\"responseMessage\":\"Approved and completed successfully\",\"data\":{\"fccref\":\"010BKOU230315726\"}}",
+                    "createdAt": "2022-03-09T10:04:51.687",
+                    "phaseRemark": "FC"
+                },
+                {
+                    "id": 1715,
+                    "phaseStep": "2",
+                    "resCode": "SUC",
+                    "resMark": "Approved and completed successfully",
+                    "exception": "{\"errorCode\":\"0\",\"srcAccountId\":\"cabckhppxxx@cabc\",\"destAccountId\":\"sothearoth_yem5@cabc\",\"assetId\":\"usd#nbc\",\"amount\":\"1.00\",\"trxHash\":\"e146e375166fa162a4d531560ab686abcd99d9da92c48716e19a0f5f46336636\",\"createTime\":1.646795165882045E9,\"precision\":2.0,\"description\":\"\",\"responseCode\":\"0\",\"extRef\":\"220309100521808939\",\"sourceOfFunds\":{\"name\":\"PRUM PHALLY\",\"phoneNumber\":\"0000253098\"}}",
+                    "createdAt": "2022-03-09T10:04:52.127",
+                    "phaseRemark": "BKG"
+                }
+            ],
+            "instructionRef": null,
+            "paymentRef": null,
+            "transactionAmount": "1",
+            "txnType": "OUT",
+            "status": "SUC",
+            "createdAt": "2022-03-09T10:04:51.669",
+            "transferType": "W",
+            "srcBankCode": "CABCKHPPXXX",
+            "srcAccNo": "0000253098",
+            "srcAccCcy": "USD",
+            "srcAccName": "PRUM PHALLY",
+            "destBankCode": "CABCKHPPXXX",
+            "destAccNo": "sothearoth_yem5@cabc",
+            "destAccCcy": "USD",
+            "destAccName": "PRUM PHALLY",
+            "reqData": "{\"senderAccountNumber\":\"0000253098\",\"senderName\":\"PRUM PHALLY\",\"senderBankName\":\"Cambodian Asia Bank\",\"senderBranchCode\":\"010\",\"senderBankCode\":\"CABCKHPPXXX\",\"xref\":\"220309100521808939\",\"transferAmt\":1.00,\"transferCcy\":\"USD\",\"originalAmt\":1.00,\"originalCcy\":\"USD\",\"feeAmt\":0.00,\"feeCcy\":\"USD\",\"totalDebitAmt\":1.00,\"exchangeRate\":\"\",\"narrative\":\"\",\"creDtTm\":\"2022-03-09T03:04:51.292949\",\"requestDate\":\"2022-03-09\",\"cbsDate\":\"2023-01-31\",\"prd\":\"BKOU\",\"destAccountId\":\"sothearoth_yem5@cabc\",\"srcName\":\"PRUM PHALLY\",\"channelInfo\":{\"channelCode\":\"MB\"},\"qrCode\":\"\",\"isCorporate\":false,\"isSameBank\":false}",
+            "fcReqData": "{\"userid\":\"BANKFLEXMB\",\"xref\":\"220309100521808939\",\"prd\":\"BKOU\",\"txnAccNo\":\"0000253098\",\"txnAccCcy\":\"USD\",\"txnAccAmt\":\"1.00\",\"txnAccBrn\":\"010\",\"offAccNo\":\"389210020\",\"offAccCcy\":\"USD\",\"offAccBrn\":\"010\",\"xrate\":\"\",\"valDate\":\"2023-01-31\",\"narrative\":\"\"}",
+            "bkgReqData": "{\"destAccountId\":\"sothearoth_yem5@cabc\",\"srcName\":\"PRUM PHALLY\",\"assetId\":\"usd#nbc\",\"amount\":\"1.00\",\"description\":\"\",\"extRef\":\"220309100521808939\",\"sourceOfFunds\":{\"name\":\"PRUM PHALLY\",\"phoneNumber\":\"0000253098\"}}",
+            "createdBy": "MB",
+            "updatedAt": "2022-03-09T10:04:52.296",
+            "updatedBy": "SYS",
+            "qr": null,
+            "feeAmount": null,
+            "feeCcy": null,
+            "khqrMerchantStatus": null
+        }
+    ],
+    "pageable": {
+        "sort": {
+            "sorted": false,
+            "unsorted": true,
+            "empty": true
+        },
+        "offset": 0,
+        "pageSize": 10,
+        "pageNumber": 0,
+        "paged": true,
+        "unpaged": false
+    },
+    "last": true,
+    "totalPages": 1,
+    "totalElements": 1,
+    "size": 10,
+    "number": 0,
+    "sort": {
+        "sorted": false,
+        "unsorted": true,
+        "empty": true
+    },
+    "numberOfElements": 1,
+    "first": true,
+    "empty": false
+}
+
+
+
+
+
+
+
+
+
+
+====================================================
 spring.datasource.url=jdbc:oracle:thin:@localhost:1521:xe
 spring.datasource.username=your_readonly_user
 spring.datasource.password=your_password

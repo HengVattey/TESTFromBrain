@@ -1,3 +1,21 @@
+import { HttpClient } from "@angular/common/http";
+import { Injectable } from "@angular/core";
+import { Observable } from "rxjs";
+import { ContenFull } from "../domain/contenFull";
+
+@Injectable({
+  providedIn: 'root'
+})
+
+export class PaginatorServices{
+
+constructor (private http:HttpClient){}
+getTransaction( page:number, size:number,searchType:string, query:string):Observable<ContenFull>{
+    return this.http.get<ContenFull>(`http://localhost:8080/api/v2/transactions?page=${page}&size=${size}&searchType=${searchType}&fccrec=${query}` );
+}
+
+
+}
 
 
 =====================================================Code Teacher Vit Sent=============================================================

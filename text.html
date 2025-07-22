@@ -1,5 +1,134 @@
 
 
+=====================================================Code Teacher Vit Sent=============================================================
+				=========HTML========
+<div class="p-inputgroup">
+  <input type="text" pInputText [(ngModel)]="searchTerm" placeholder="Search..." (ngModelChange)="onSearch()" />
+</div>
+
+<p-table [value]="users" [paginator]="false" [rows]="pageSize">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>Name</th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-user>
+    <tr>
+      <td>{{ user.name }}</td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<p-paginator
+  [rows]="pageSize"
+  [totalRecords]="totalRecords"
+  [first]="page * pageSize"
+  (onPageChange)="onPageChange($event)">
+</p-paginator>
+
+
+
+==========TS=======
+import { Component, OnInit } from '@angular/core';
+import { UserService } from './user.service';
+import { User } from './user.model';
+
+@Component({
+  selector: 'app-user-list',
+  templateUrl: './user-list.component.html'
+})
+export class UserListComponent implements OnInit {
+  users: User[] = [];
+  searchTerm: string = '';
+  page: number = 0;
+  pageSize: number = 10;
+  totalRecords: number = 0;
+
+  constructor(private userService: UserService) {}
+
+  ngOnInit() {
+    this.loadUsers();
+  }
+
+  loadUsers() {
+    this.userService.getUsers(this.searchTerm, this.page, this.pageSize).subscribe(response => {
+      this.users = response.content;
+      this.totalRecords = response.totalElements;
+    });
+  }
+
+  onSearch() {
+    this.page = 0; // reset to first page
+    this.loadUsers();
+  }
+
+  onPageChange(event: any) {
+    this.page = event.page;
+    this.pageSize = event.rows;
+    this.loadUsers();
+  }
+}
+
+=====================Service==================
+
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { User, PagedResponse } from './user.model';
+
+@Injectable({ providedIn: 'root' })
+export class UserService {
+  constructor(private http: HttpClient) {}
+
+  getUsers(search: string, page: number, size: number): Observable<PagedResponse<User>> {
+    const params = new HttpParams()
+      .set('search', search)
+      .set('page', page)
+      .set('size', size);
+    return this.http.get<PagedResponse<User>>('/api/users', { params });
+  }
+}
+
+
+================ Import  ===============
+	    import { FormsModule } from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
+import { TableModule } from 'primeng/table';
+import { PaginatorModule } from 'primeng/paginator';
+import { InputTextModule } from 'primeng/inputtext';
+
+@NgModule({
+  imports: [
+    FormsModule,
+    HttpClientModule,
+    TableModule,
+    PaginatorModule,
+    InputTextModule
+  ]
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===========================================================================================================================================
+
+
+
+
+
 {
     "content": [
         {

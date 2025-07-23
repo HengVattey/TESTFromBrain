@@ -1,3 +1,301 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">DBProFlexcube  </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="#">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Link</a>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Dropdown
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <li><a class="dropdown-item" href="#">Action</a></li>
+            <li><a class="dropdown-item" href="#">Another action</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#">Something else here</a></li>
+          </ul>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
+        </li>
+      </ul>
+      <!-- <form class="d-flex">
+        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+        <button class="btn btn-outline-success" type="submit">Search</button>
+      </form> -->
+    </div>
+  </div>
+</nav>
+
+<div class=" d-flex justify-content-end gap-3 p-3">
+    <p-select
+        [options]="searchTypes"
+        [(ngModel)]="selected"
+        (ngModelChange)="onSearchTypeChange()"
+        optionLabel="type"
+        placeholder="Select a Field"
+        class="w-full md:w-56" />
+
+    <div class="p-inputgroup">
+      <span class="p-inputgroup-addon">
+        <i class="pi pi-search"></i>
+      </span>
+      <input
+        type="text"
+        pInputText
+        [(ngModel)]="txtSearch"
+        placeholder="Search..."
+        (ngModelChange)="onSearchInput()"
+        
+      />
+    </div>
+</div>
+
+
+<div class="d-flex justify-content-center mb-4">
+    <p-selectbutton [options]="sizes" [(ngModel)]="selectedSize" [multiple]="false" optionLabel="name" optionValue="value" />
+</div>
+
+<p-table 
+[value]="contents" 
+[size]="selectedSize"
+[paginator]="false" 
+[rows]="pageSize" 
+[scrollable]="true"
+scrollHeight="50vh"
+showGridlines
+
+
+
+>
+  <ng-template pTemplate="header">
+    <tr>
+      <th>ID</th>
+      <th>XREF</th>
+      <th>FCCREF</th>
+      <th>TXNHASH</th>
+      <th>PHASES </th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-content>
+    <tr>
+      <td>{{ content.id }}</td>
+      <td>{{content.xref}}</td>
+      <td>{{content.fccRef}} </td>
+      <td>{{content.txnHash}} </td>
+      <!-- <td>{{content.phases}} </td> -->
+      <td>
+        <span  > 
+          
+
+       <div class="">
+    <p-button (click)="showDialog()" label="Show" />
+    <p-dialog [(visible)]="visible" [modal]="true" [style]="{ width: '25rem' }">
+       <div  class="container" *ngFor="let phase of content.phases"> 
+        <p class="fw-bold "> Information</p>
+        <p class="fw-bold"> {{selected?.type}} : {{txtSearch}} </p>
+        <p> ID :{{phase.id}} , RespondCode:{{phase.resCode}} , Remark: {{phase.phaseRemark}} </p>
+       
+        <p>  <span class="fw-bold text-danger"> Exception: </span> {{phase.exception}} </p>
+
+        <p> Transaction Amount  : {{content.transactionAmount}} </p>
+        <p> txnType:{{content.txnType}} </p>
+        <p> Status :{{content.status}} </p>
+        <p> Created At: {{content.createdAt}} </p>
+        <p> Transfer Type: {{content.transferType}} </p>
+         <p class="fw-bold text-center text-decoration-underline"> Source </p>
+        <p> srcBankCode : {{content.srcBankCode}} </p>
+        <p> srcAccNo   : {{content.srcAccNo}}</p>
+        <p > srcAccCcy  :  <span class="fw-bold">{{content.srcAccCcy}}</span>   </p>
+        <p> srcAccName:   <span class="fw-bold text-danger">{{content.srcAccName}}</span> </p>
+        <p class="fw-bold text-center text-decoration-underline"> Destination </p>
+        <p> destBankCode : {{content.destBankCode}} </p>
+        <p> destAccNo  : {{content.destAccNo}} </p>
+        <p>destAccName : {{content.destAccName}} </p>
+        <p>createdBy : {{content.createdBy}}  </p>
+        <p> updatedAt : {{content.updatedAt}} </p>
+        <p>updatedBy : {{content.updatedBy}} </p>
+        <p>khqrMerchantStatus : {{content.khqrMerchantStatus}} </p>
+        </div>
+       
+    </p-dialog>
+</div>
+        </span>
+ 
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+<p-paginator
+  [rows]="pageSize"
+  [totalRecords]="totalRecords"
+  [first]="page * pageSize"
+  (onPageChange)="onPageChange($event)"
+
+  >
+</p-paginator>
+
+import { SearchService } from './search-service';
+import { HttpClientModule } from '@angular/common/http';
+import { Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { InputTextModule } from 'primeng/inputtext';
+import { PaginatorModule } from 'primeng/paginator';
+import { TableModule } from 'primeng/table';
+import { Content, PagedResponse } from '../domain/contenFull';
+import { Select } from 'primeng/select';
+import { debounceTime, distinctUntilChanged, Subject, Subscription } from 'rxjs';
+import { CommonModule } from '@angular/common';
+import { AvatarModule } from 'primeng/avatar';
+import { ButtonModule } from 'primeng/button';
+import { Dialog } from 'primeng/dialog';
+import { SelectButton } from 'primeng/selectbutton';
+interface Isearch {
+    type: string;
+}
+@Component({
+  selector: 'app-search',
+  imports: [ FormsModule,
+    HttpClientModule,
+    TableModule,
+    PaginatorModule,
+    InputTextModule,Select,
+    CommonModule,
+    Dialog, ButtonModule, AvatarModule,SelectButton
+  ],
+  templateUrl: './search.html',
+  styleUrl: './search.css'
+})
+export class Search implements OnInit{
+searchTypes: Isearch[] | undefined;
+selected: Isearch | undefined;
+contents:Content[]=[];
+searchType:string="";
+txtSearch:string="";
+page:number=0;
+pageSize:number=5;
+totalRecords:number=0;
+getType:string="";
+ sizes!: any[];
+
+    selectedSize: any = undefined
+private searchSubject = new Subject<string>();
+private searchSubscription!: Subscription;
+
+ visible: boolean = false;
+
+    showDialog() {
+        this.visible = true;
+    }
+constructor(private services:SearchService){
+   console.log("hi")
+}
+  onSearchTypeChange() {
+      this.getType=this.selected?.type || "";
+   // this.onSearch();
+   console.log(this.getType);
+  }
+  onSearchInput(){
+  this.loadUsers();
+// this.searchSubject.next(this.txtSearch);
+
+  }
+ 
+ngOnInit(): void {
+ // this.onSearchInput();
+ // this.loadUsers();
+   this.searchTypes = [
+  
+            { type: 'fccRef' },
+            { type: 'txnHash' },
+            { type: 'xRef' },
+          
+        ];
+        
+        this.sizes = [
+            { name: 'Small', value: 'small' },
+            { name: 'Normal', value: undefined },
+            { name: 'Large', value: 'large' }
+        ];
+
+           this.selected = this.searchTypes[0];
+
+    // Listen to the search input with a 400ms debounce
+    this.searchSubscription = this.searchSubject.pipe(
+      debounceTime(400),
+      distinctUntilChanged()
+    ).subscribe(() => {
+      this.onSearch();
+    });
+    this.loadUsers();
+}
+loadUsers(){
+
+  console.log("aa="+ this.selected?.type);
+  this.services.getTransactions(this.selected?.type || "",this.txtSearch,this.page, this.pageSize).subscribe(response=>{ 
+  this.contents=response.content;
+  this.totalRecords=response.totalElements;
+
+  });
+}
+onSearch(){
+  this.page=0;
+  
+  this.loadUsers();
+}
+onPageChange(event:any){
+this.page=event.page;
+this.pageSize=event.rows;
+this.loadUsers();
+}
+
+}
+
+
+
+
+import { Injectable } from '@angular/core';
+import { ContenFull, Content, PagedResponse } from '../domain/contenFull';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+@Injectable({
+  providedIn: 'root'
+})
+export class SearchService {
+   constructor(private http: HttpClient) {}
+  getTransactions(searchType: string,txtSearch:string, page: number, size: number): Observable<PagedResponse<Content>> {
+    const params = new HttpParams()
+      .set('searchType', searchType)
+      .set('query',txtSearch)
+      .set('page', page)
+      .set('size', size)
+      .set('sort',"id,desc");
+    return this.http.get<PagedResponse<Content>>('http://localhost:8080/api/v2/transactions', { params });
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+==================================================
+
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { Observable } from "rxjs";

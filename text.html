@@ -1,3 +1,253 @@
+============================================Decode===============================
+import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import jsQR, { QRCode } from 'jsqr'; // This is the library to make us can decode from image
+import { DecodeServiceService } from '../service/decode-service.service';
+import { ApiResponse, BaseRequet } from '../Model/DataVM.model';
+import { ButtonModule } from 'primeng/button';
+import { RippleModule } from 'primeng/ripple';
+import { TableModule } from 'primeng/table';
+
+@Component({
+  selector: 'app-decode',
+  imports: [FormsModule, CommonModule,ButtonModule, RippleModule,TableModule],
+  templateUrl:'./decode.component.html',
+  styleUrl: './decode.component.css'
+})
+export class DecodeComponent implements OnInit {
+  selectedFile: File | null = null;
+    decodedText: string = '';
+    errorMessage: string = '';
+    getData: ApiResponse[]=[]; // I want to get from end-point that store list objects when I post and it return to into List
+    oneRequest: ApiResponse | null = null; // I can get oneRequest only when post, will return back 1 
+    data:any;
+    getAPI:any;
+    private canvas: HTMLCanvasElement;
+    private ctx: CanvasRenderingContext2D | null;
+    constructor(private decodeR:DecodeServiceService) {
+        this.canvas = document.createElement('canvas');
+        this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+    }
+    ngOnInit(): void {   // This function I use to test 
+    // this.getAll(); 
+    // console.log(this.decodedText);
+    }
+postToAPI():void{ // This is the function that I use with this project to post and get return back to store in ApiResponse
+    const sendToAPI:BaseRequet={
+  "channelInfo": {
+    "channelCode": "MB"
+  },
+  "qrCode":this.decodedText
+};
+       this.decodeR.Post(sendToAPI).subscribe(gets=>{
+                this.oneRequest=gets;
+                console.log(this.oneRequest);
+        });
+ 
+}
+    getAll():void{
+        this.decodeR.getObservable().subscribe(qr=>{
+            this.getData=qr;
+            console.log("Baby");
+            console.log(this.getData);
+        });
+    }
+    //Notes
+    //======To get code from Image===//
+    onFileSelected(event: Event): void {
+        const input = event.target as HTMLInputElement;
+        if (input.files && input.files.length > 0) {
+            this.selectedFile = input.files[0];
+            this.clearMessages();
+        } else {
+            this.selectedFile = null;
+            this.clearMessages();
+        }
+    }
+    decodeQrCode(): void {
+        this.clearMessages();
+
+        if (!this.selectedFile) {
+            this.errorMessage = 'Please select an image file first.';
+            return;
+        }
+        if (!this.selectedFile.type.startsWith('image/')) {
+            this.errorMessage = 'Please upload an image file (e.g., PNG, JPG).';
+            return;
+        }
+        const reader = new FileReader();
+
+        reader.onload = (e: ProgressEvent<FileReader>) => {
+            const img = new Image();
+            img.onload = () => {
+                if (!this.ctx) {
+                    this.errorMessage = 'Canvas context not available.';
+                    return;
+                }
+                this.canvas.width = img.width;
+                this.canvas.height = img.height;
+                this.ctx.drawImage(img, 0, 0, img.width, img.height);
+
+                try {
+                    const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+                    const code: QRCode | null = jsQR(imageData.data, imageData.width, imageData.height);
+
+                    if (code) {
+                        this.decodedText = code.data;  
+                         this.postToAPI(); // This funcion will work when we have image's code
+                    } else {
+                        this.errorMessage = 'No QR code found in the image. PLease ';
+                    }
+                } catch (err) {
+                    console.error("Error decoding QR:", err);
+                    this.errorMessage = 'An error occurred during decoding. Please try another image.';
+                }
+            };
+            img.onerror = () => {
+                this.errorMessage = 'Could not load image. Please check the file.';
+            };
+            img.src = e.target?.result as string;
+        };
+        reader.onerror = () => {
+            this.errorMessage = 'Failed to read file.';
+        };
+        reader.readAsDataURL(this.selectedFile);
+    }
+    private clearMessages(): void {
+        this.decodedText = '';
+        this.errorMessage = '';
+    }
+    //======End codes to get  code from Image (I store the imgae's code in a variable *(decodedText) ) ===//
+}
+		====HTML=====
+
+		<div class="container mt-5 border border-str">
+  <div class="container mt-5 align-self-center">
+    <h1>Online QR Code Decoder</h1>
+    <p>Upload a QR code image to decode its content.</p>
+
+    <input
+      class="btn"
+      type="file"
+      id="qrImageInput"
+      (change)="onFileSelected($event)"
+      accept="image/*"
+      [(ngModel)]="selectedFile"
+    />
+    <button
+      style="background-color: blue"
+      (click)="decodeQrCode()"
+      class="btn text-white"
+    >
+      Decode QR Code
+    </button>
+
+    <div
+      class="drop-zone mt-3 p-5 border border-dashed rounded text-center"
+      (drop)="onFileDropped($event)"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)"
+      [class.drag-over]="isDragging"
+    >
+      <p>Drag & Drop QR Code Image Here or Click to Upload</p>
+      <p *ngIf="isDragging" class="text-primary">Release to upload</p>
+    </div>
+
+    @if (decodedText) {
+    <div id="result">
+      <div class="container">
+        <h2>Decoded Qr:</h2>
+      </div>
+      <div class="container text-danger">
+        <p id="decodedText">{{ decodedText }}</p>
+      </div>
+
+      <div class="container">
+        <div class="container">
+          <div class="table-responsive">
+            <table class="table table-responsive">
+              <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">responseCode</th>
+                  <th scope="col">responseMessage</th>
+                  <th scope="col">qrCode</th>
+                  <th scope="col">ccy</th>
+                  <th scope="col">amt</th>
+                  <th scope="col">merchantId</th>
+                  <th scope="col">srcName</th>
+                  <th scope="col">accountId</th>
+                  <th scope="col">billNumber</th>
+                  <th scope="col">storeName</th>
+                  <th scope="col">terminalLabel</th>
+                  <th scope="col">mobileNumber</th>
+                  <th scope="col">qrType</th>
+                  <th scope="col">qrMethod</th>
+                  <th scope="col">location</th>
+                  <th scope="col">recipientBank</th>
+                  <th scope="col">isCorporate</th>
+                  <th scope="col">isSameBank</th>
+                  <th scope="col">isActive</th>
+                  <th scope="col">accountInformation</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">1</th>
+                  <td>{{ oneRequest?.responseCode }}</td>
+                  <td>{{ oneRequest?.responseMessage }}</td>
+                  <td>{{ oneRequest?.data?.qrCode }}</td>
+                  <td>{{ oneRequest?.data?.ccy }}</td>
+                  <td>{{ oneRequest?.data?.amt }}</td>
+                  <td>{{ oneRequest?.data?.merchantId }}</td>
+                  <td>{{ oneRequest?.data?.srcName }}</td>
+                  <td>{{ oneRequest?.data?.accountId }}</td>
+                  <td>{{ oneRequest?.data?.billNumber }}</td>
+                  <td>{{ oneRequest?.data?.storeName }}</td>
+                  <td>{{ oneRequest?.data?.terminalLabel }}</td>
+                  <td>{{ oneRequest?.data?.mobileNumber }}</td>
+                  <td>{{ oneRequest?.data?.qrType }}</td>
+                  <td>{{ oneRequest?.data?.qrMethod }}</td>
+                  <td>{{ oneRequest?.data?.location }}</td>
+                  <td>{{ oneRequest?.data?.recipientBank }}</td>
+                  <td>{{ oneRequest?.data?.corporate }}</td>
+                  <td>{{ oneRequest?.data?.sameBank }}</td>
+                  <td>{{ oneRequest?.data?.active }}</td>
+                  <td>{{ oneRequest?.data?.accountInformation }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    } @if (errorMessage) {
+    <div id="error">
+      <p class="text-danger p-3 fw-bold">
+        <span id="errorMessage">{{ errorMessage }}</span>
+      </p>
+    </div>
+    }
+  </div>
+</div>
+		=============CSS======
+
+ .drop-zone {
+  border: 2px dashed #ccc;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+}
+
+.drop-zone.drag-over {
+  border-color: blue;
+  background-color: #f0f8ff; /* Light blue background */
+}
+
+
+===================================================================================================================================================
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
   <div class="container-fluid">
     <a class="navbar-brand" href="#">DBProFlexcube  </a>

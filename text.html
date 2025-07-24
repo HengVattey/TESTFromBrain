@@ -1,3 +1,320 @@
+
+
+import { CommonModule } from '@angular/common';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core'; // Import ViewChild and ElementRef
+import { FormsModule } from '@angular/forms';
+import jsQR, { QRCode } from 'jsqr';
+import { DecodeServiceService } from '../service/decode-service.service';
+import { ApiResponse, BaseRequet } from '../Model/DataVM.model';
+import { ButtonModule } from 'primeng/button';
+import { RippleModule } from 'primeng/ripple';
+import { TableModule } from 'primeng/table';
+
+@Component({
+  selector: 'app-decode',
+  imports: [FormsModule, CommonModule, ButtonModule, RippleModule, TableModule],
+  templateUrl: './decode.component.html',
+  styleUrl: './decode.component.css',
+})
+export class DecodeComponent implements OnInit {
+  @ViewChild('qrImageInput') qrImageInput!: ElementRef; // Reference to the file input
+
+  selectedFile: File | null = null;
+  decodedText: string = '';
+  errorMessage: string = '';
+  getData: ApiResponse[] = [];
+  oneRequest: ApiResponse | null = null;
+  data: any;
+  getAPI: any;
+  private canvas: HTMLCanvasElement;
+  private ctx: CanvasRenderingContext2D | null;
+  isDragging: boolean = false;
+  imagePreviewUrl: string | ArrayBuffer | null = null; // New property for image preview
+
+  constructor(private decodeR: DecodeServiceService) {
+    this.canvas = document.createElement('canvas');
+    this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+  }
+
+  ngOnInit(): void {
+    // this.getAll();
+    // console.log(this.decodedText);
+  }
+
+  postToAPI(): void {
+    const sendToAPI: BaseRequet = {
+      channelInfo: {
+        channelCode: 'MB',
+      },
+      qrCode: this.decodedText,
+    };
+    this.decodeR.Post(sendToAPI).subscribe((gets) => {
+      this.oneRequest = gets;
+      console.log(this.oneRequest);
+    });
+  }
+
+  getAll(): void {
+    this.decodeR.getObservable().subscribe((qr) => {
+      this.getData = qr;
+      console.log('Baby');
+      console.log(this.getData);
+    });
+  }
+
+  // Handle file selection from the input
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedFile = input.files[0];
+      this.clearMessages();
+      this.generateImagePreview(this.selectedFile); // Generate preview
+      // Clear drag & drop related preview if any
+      this.imagePreviewUrl = null;
+    } else {
+      this.selectedFile = null;
+      this.clearMessages();
+      this.imagePreviewUrl = null;
+    }
+  }
+
+  /**
+   * Handles the file drop event on the drag-and-drop zone.
+   * @param event The DragEvent object.
+   */
+  onFileDropped(event: DragEvent): void {
+    event.preventDefault(); // Prevent default browser behavior (e.g., opening file in new tab)
+    event.stopPropagation(); // Stop propagation to avoid triggering other drag events
+    this.isDragging = false; // Reset dragging state
+
+    if (event.dataTransfer && event.dataTransfer.files.length > 0) {
+      const droppedFile = event.dataTransfer.files[0];
+      // Ensure the dropped item is an image
+      if (droppedFile.type.startsWith('image/')) {
+        this.selectedFile = droppedFile;
+        this.clearMessages();
+        this.generateImagePreview(this.selectedFile); // Generate preview
+        this.clearFileInput(); // Clear the file input
+        // Optionally, you can trigger decodeQrCode() immediately after a file is dropped
+        this.decodeQrCode();
+      } else {
+        this.errorMessage = 'Only image files are allowed.';
+        this.imagePreviewUrl = null;
+      }
+    }
+  }
+
+  /**
+   * Handles the drag over event on the drag-and-drop zone.
+   * This method is crucial to allow a drop to happen.
+   * @param event The DragEvent object.
+   */
+  onDragOver(event: DragEvent): void {
+    event.preventDefault(); // Necessary to allow dropping
+    event.stopPropagation();
+    this.isDragging = true;
+  }
+
+  /**
+   * Handles the drag leave event when a dragged item leaves the drop zone.
+   * @param event The DragEvent object.
+   */
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+  }
+
+  decodeQrCode(): void {
+    this.clearMessages();
+
+    if (!this.selectedFile) {
+      this.errorMessage = 'Please select or drag an image file first.';
+      return;
+    }
+    if (!this.selectedFile.type.startsWith('image/')) {
+      this.errorMessage = 'Please upload an image file (e.g., PNG, JPG).';
+      return;
+    }
+    const reader = new FileReader();
+
+    reader.onload = (e: ProgressEvent<FileReader>) => {
+      const img = new Image();
+      img.onload = () => {
+        if (!this.ctx) {
+          this.errorMessage = 'Canvas context not available.';
+          return;
+        }
+        this.canvas.width = img.width;
+        this.canvas.height = img.height;
+        this.ctx.drawImage(img, 0, 0, img.width, img.height);
+
+        try {
+          const imageData = this.ctx.getImageData(
+            0,
+            0,
+            this.canvas.width,
+            this.canvas.height
+          );
+          const code: QRCode | null = jsQR(
+            imageData.data,
+            imageData.width,
+            imageData.height
+          );
+
+          if (code) {
+            this.decodedText = code.data;
+            this.postToAPI(); // This function will work when we have image's code
+          } else {
+            this.errorMessage = 'No QR code found in the image. Please try again.';
+          }
+        } catch (err) {
+          console.error('Error decoding QR:', err);
+          this.errorMessage =
+            'An error occurred during decoding. Please try another image.';
+        }
+      };
+      img.onerror = () => {
+        this.errorMessage = 'Could not load image. Please check the file.';
+      };
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = () => {
+      this.errorMessage = 'Failed to read file.';
+    };
+    reader.readAsDataURL(this.selectedFile);
+  }
+
+  /**
+   * Generates a URL for image preview and assigns it to imagePreviewUrl.
+   * @param file The image file to preview.
+   */
+  private generateImagePreview(file: File): void {
+    const reader = new FileReader();
+    reader.onload = (e: ProgressEvent<FileReader>) => {
+      this.imagePreviewUrl = e.target?.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /**
+   * Clears the selected file in the traditional file input.
+   */
+  private clearFileInput(): void {
+    if (this.qrImageInput && this.qrImageInput.nativeElement) {
+      this.qrImageInput.nativeElement.value = ''; // Reset the file input value
+    }
+  }
+
+  private clearMessages(): void {
+    this.decodedText = '';
+    this.errorMessage = '';
+    // this.imagePreviewUrl = null; // You might want to clear preview here too, depending on desired behavior
+  }
+}
+
+=========================
+<div class="container mt-5 border border-str ">
+    <div class="container mt-5 align-self-center ">
+        <h1>Online QR Code Decoder </h1>
+        <p>Upload a QR code image to decode its content.</p>
+
+        <input class="btn" type="file" id="qrImageInput" (change)="onFileSelected($event)" accept="image/*" [(ngModel)]="selectedFile" #qrImageInput>
+        <button style="background-color: blue" (click)="decodeQrCode()" class="btn text-white" >Decode QR Code</button>
+
+        <div
+            class="drop-zone mt-3 p-5 border border-dashed rounded text-center"
+            (drop)="onFileDropped($event)"
+            (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave($event)"
+            [class.drag-over]="isDragging"
+        >
+            <p>Drag & Drop QR Code Image Here or Click to Upload</p>
+            <p *ngIf="isDragging" class="text-primary">Release to upload</p>
+            <div *ngIf="imagePreviewUrl" class="mt-3">
+                <img [src]="imagePreviewUrl" alt="QR Code Preview" style="max-width: 150px; max-height: 150px; border: 1px solid #ddd;"/>
+                <p class="mt-2 text-muted">Preview of selected QR Code</p>
+            </div>
+        </div>
+
+        @if (decodedText) {
+        <div id="result">
+            <div class="container">
+                <h2>Decoded Qr: </h2>
+            </div>
+            <div class="container text-danger">
+                <p id="decodedText" >{{ decodedText }}</p>
+            </div>
+
+            <div class="container">
+                <div class="container">
+                    <div class="table-responsive">
+                        <table class="table table-responsive">
+                            <thead>
+                                <tr>
+                                    <th scope="col">#</th>
+                                    <th scope="col">responseCode</th>
+                                    <th scope="col">responseMessage</th>
+                                    <th scope="col">qrCode</th>
+                                    <th scope="col">ccy</th>
+                                    <th scope="col">amt</th>
+                                    <th scope="col">merchantId</th>
+                                    <th scope="col">srcName</th>
+                                    <th scope="col">accountId</th>
+                                    <th scope="col">billNumber</th>
+                                    <th scope="col">storeName</th>
+                                    <th scope="col">terminalLabel</th>
+                                    <th scope="col">mobileNumber</th>
+                                    <th scope="col">qrType</th>
+                                    <th scope="col">qrMethod</th>
+                                    <th scope="col">location</th>
+                                    <th scope="col">recipientBank</th>
+                                    <th scope="col">isCorporate</th>
+                                    <th scope="col">isSameBank</th>
+                                    <th scope="col">isActive</th>
+                                    <th scope="col">accountInformation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th scope="row">1</th>
+                                    <td>{{oneRequest?.responseCode}}</td>
+                                    <td>{{oneRequest?.responseMessage}}</td>
+                                    <td>{{oneRequest?.data?.qrCode}}</td>
+                                    <td>{{oneRequest?.data?.ccy}}</td>
+                                    <td>{{oneRequest?.data?.amt}}</td>
+                                    <td>{{oneRequest?.data?.merchantId}}</td>
+                                    <td>{{oneRequest?.data?.srcName}}</td>
+                                    <td> {{oneRequest?.data?.accountId}} </td>
+                                    <td>{{oneRequest?.data?.billNumber}}</td>
+                                    <td>{{oneRequest?.data?.storeName}}</td>
+                                    <td>{{ oneRequest?.data?.terminalLabel}}</td>
+                                    <td>{{oneRequest?.data?.mobileNumber}}</td>
+                                    <td>{{oneRequest?.data?.qrType}}</td>
+                                    <td>{{oneRequest?.data?.qrMethod}}</td>
+                                    <td>{{oneRequest?.data?.location}}</td>
+                                    <td>{{oneRequest?.data?.recipientBank}}</td>
+                                    <td>{{oneRequest?.data?.corporate}}</td>
+                                    <td>{{oneRequest?.data?.sameBank}}</td>
+                                    <td>{{oneRequest?.data?.sameBank}}</td>
+                                    <td>{{oneRequest?.data?.active}}</td>
+                                    <td>{{oneRequest?.data?.accountInformation}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        } @if (errorMessage) {
+        <div id="error">
+            <p class="text-danger p-3 fw-bold"> <span id="errorMessage">{{ errorMessage }}</span></p>
+        </div>
+        }
+    </div>
+</div>
+
+===================================================================================================================================
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';

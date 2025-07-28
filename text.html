@@ -1,5 +1,124 @@
+ function Sendaccount() {
+     $("#accnumber").attr("required", "true");
+     var accnumber = $("#accnumber").val();
+     var transactionid = $("#transaction_id").val();
+     $.post("https://webpayment-uat.cab.com.kh/transaction/sendaccount.php", {
+             accnumber: accnumber,
+             transactionid: transactionid
+         },
+         function(data) {
+             $('#Continue').html(data);
+             //$('#myForm')[0].reset();		
+         });
+ }
+
+ function resendSendaccount() {
+     $("#accnumber").attr("required", "true");
+     var accnumber = $("#accnumber").val();
+     var transactionid = $("#transaction_id").val();
+     $.post("https://webpayment-uat.cab.com.kh/transaction/sendaccount.php", {
+             accnumber: accnumber,
+             transactionid: transactionid
+         },
+         function(data) {
+             $('#Continue').html(data);
+             //$('#myForm')[0].reset();		
+         });
+ }
+
+ function ConfirmOTP() {
+     var otp = $("#otp").val();
+     var return_url = $("#return_url").val();
+     var transactionid = $("#transaction_id").val();
+     $.post("https://webpayment-uat.cab.com.kh/transaction/verify_otp.php", {
+             otp: otp,
+             transactionid: transactionid,
+             return_url: return_url
+         },
+         function(data) {
+             $('#otp_verify').html(data);
+             $('#otp')[0].reset();
+             $('#myPass')[0].reset();
+         });
+ }
+
+ ///////////// subscribe //////////////
+
+ function Sendaccount_subscribe() {
+     $("#accnumber").attr("required", "true");
+     var accnumber = $("#accnumber").val();
+     var return_url = $("#return_url").val();
+     var merchant_id = $("#merchant_id").val();
+     var details = $("#details").val();
+     var transactionid = $("#transaction_id").val();
+     $.post("https://webpayment-uat.cab.com.kh/directdebit/subscribe/sendaccount_subscribe.php", {
+             accnumber: accnumber,
+             return_url: return_url,
+             details: details,
+             merchant_id: merchant_id,
+             transactionid: transactionid
+         },
+         function(data) {
+             $('#Continue').html(data);
+             //$('#myForm')[0].reset();		
+         });
+ }
 
 
+ function SubscribeConfirmOTP() {
+     var otp = $("#otp").val();
+     var accnumber = $("#accnumber").val();
+     var return_url = $("#return_url").val();
+     var merchant_id = $("#merchant_id").val();
+     var details = $("#details").val();
+     var transactionid = $("#transaction_id").val();
+
+     $.post("https://webpayment-uat.cab.com.kh/directdebit/subscribe/subscribe_verify_otp.php", {
+             otp: otp,
+             accnumber: accnumber,
+             return_url: return_url,
+             details: details,
+             merchant_id: merchant_id,
+             transactionid: transactionid
+         },
+         function(data) {
+             $('#Continue').html(data);
+             $('#otp')[0].reset();
+             $('#myPass')[0].reset();
+         });
+ }
+
+
+ ///////////// unsubscribe //////////////
+ function Sendaccount_unsubscribe() {
+     $("#subscribe_token").attr("required", "true");
+     var subscribe_token = $("#subscribe_token").val();
+     $.post("https://webpayment-uat.cab.com.kh/directdebit/subscribe/sendaccount_unsubscribe.php", {
+             subscribe_token: subscribe_token
+         },
+         function(data) {
+             $('#Continue').html(data);
+             //$('#myForm')[0].reset();		
+         });
+ }
+
+ function TermCondition() {
+
+     $("#termcondition").attr("required", "true");
+     var text = $("#text").val();
+     var accnumber = $("#accnumber").val();
+     $.post("https://webpayment-uat.cab.com.kh/directdebit/subscribe/termcondition.php", {
+             text: text,
+             accnumber: accnumber
+         },
+         function(data) {
+             $('#TermCondition').html(data);
+             //$('#myForm')[0].reset();		
+         });
+ }
+
+
+================================
 <div class=" d-flex justify-content-end gap-3 p-3">
     <p-select
         [options]="searchTypes"
